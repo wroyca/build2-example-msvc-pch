@@ -18,6 +18,7 @@
 *.pcm
 *.ifc
 *.so
+*.dylib
 *.dll
 *.a
 *.lib
@@ -28,3 +29,4 @@
 *.exe.dlls/
 *.exe.manifest
 *.pc
+*.pch

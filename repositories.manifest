@@ -1,6 +1,11 @@
 : 1
-summary: pch-example project repository
+summary: hello project repository
 
-:
-role: prerequisite
-location: https://pkg.cppget.org/1/stable
+#:
+#role: prerequisite
+#location: https://pkg.cppget.org/1/stable
+#trust: ...
+
+#:
+#role: prerequisite
+#location: https://git.build2.org/hello/libhello.git

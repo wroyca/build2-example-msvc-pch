@@ -1,3 +1,3 @@
-# pch-example
+# hello
 
 C++ executable

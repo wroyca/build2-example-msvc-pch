@@ -1,0 +1,74 @@
+libs =
+#import libs += libhello%lib{hello}
+
+./: exe{hello}
+    exe{hello}: {hxx ixx txx cxx}{** -stdafx} $libs liba{stdafx}
+
+cxx.poptions =+ "-I$src_root" "-I$src_base"
+
+# Speed up the build process. Any stable header files, for example Standard
+# Library headers such as <vector>, should be included in stdafx.hxx. The
+# precompiled header is compiled only when it, or any files it includes, are
+# modified.
+#
+<file{stdafx.pch} obja{stdafx.obj}>: cxx{stdafx} hxx{stdafx}
+{{
+  src = $path($<[0])
+  pch = $path($>[0])
+  obj = $path($>[1])
+
+  sys_hdr = $regex.apply($cxx.sys_hdr_dirs, '(.+)', '-I\1')
+
+  # We rely on our build configuration to propagate the runtime as well as any
+  # required flags. (config.cc.poptions, config.cc.coptions)
+  #
+  # Note that failing to do so typically does not cause a critical failure, but
+  # it can result in unforeseen and troublesome linking issues.
+  #
+  poptions = $cxx.poptions $config.cc.poptions $sys_hdr
+  coptions = $cxx.coptions $config.cc.coptions /nologo /c /EHsc /TP /Yc "/Fp$pch" "/Fo$obj"
+
+  diag c++ ($<[0])
+
+  $cxx.path $poptions $coptions $cxx.mode $src
+}}
+
+# The library serves a dual purpose: it acts as a build synchronization point
+# for creating the precompiled header (PCH), and also carries the necessary
+# compiler flags required for utilizing the PCH.
+#
+[rule_hint=cxx] liba{stdafx}: file{stdafx.pch}:
+{
+  # Inform the rule that we will manually handle the prerequisite.
+  #
+  include = adhoc
+
+  # During the matching stage, we perform an update to ensure that the
+  # precompiled header (PCH) creation takes place prior to any code that relies
+  # on it.
+  #
+  update = match
+}
+
+# We include the object file corresponding to the precompiled header (PCH) in
+# the library, ensuring that it will be linked into the DLL/EXE targets that
+# consume it.
+#
+liba{stdafx}: obja{stdafx}
+{
+  # We expose the compiler flags necessary for consuming the precompiled header
+  # (PCH).
+  #
+  cxx.export.poptions += "/Yustdafx.hxx" "/FIstdafx.hxx" "/Fp$out_base/stdafx"
+
+  # To prevent the library from being inadvertently distributed, we exclude it
+  # from the installation stage, ensuring that it does not leak into our
+  # distribution.
+  #
+  install = false
+}
+
+# Resolve the Internal Compiler Error (ICE) that occurs when using MSVC
+# preprocessing in conjunction with precompiled headers (PCH).
+#
+obj{*}: cc.reprocess = true
