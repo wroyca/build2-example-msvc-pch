@@ -1,0 +1,15 @@
+{
+  "version": "0.2.1",
+  "defaults": {},
+  "configurations": [
+    {
+      "inheritEnvironments": [
+        "${cpp.activeConfiguration}"
+      ],
+      "name": "hello",
+      "type": "default",
+      "project": "hello\\hello.exe",
+      "workingDirectory": "${workspaceRoot}"
+    }
+  ]
+}

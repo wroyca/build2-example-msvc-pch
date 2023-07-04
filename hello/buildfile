@@ -26,7 +26,7 @@ cxx.poptions =+ "-I$src_root" "-I$src_base"
   # it can result in unforeseen and troublesome linking issues.
   #
   poptions = $cxx.poptions $config.cc.poptions $sys_hdr
-  coptions = $cxx.coptions $config.cc.coptions /nologo /c /EHsc /TP /Yc "/Fp$pch" "/Fo$obj"
+  coptions = $cxx.coptions $config.cc.coptions /nologo /c /EHsc /utf-8 /TP /Yc "/Fp$pch" "/Fo$obj"
 
   diag c++ ($<[0])
 

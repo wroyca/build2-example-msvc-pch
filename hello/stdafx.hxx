@@ -1,4 +1,3 @@
-
 // BUG (MSVC):
 //
 // Exclude `stdafx.hxx` reprocessing when "__build2_preprocess" is defined. This
@@ -133,6 +132,9 @@
 # if __has_include (<limits>)
 # include <limits>               // Uniform way to query properties of arithmetic types
 # endif
+# if __has_include (<stdfloat>)
+# include <stdfloat>             // Optional extended floating-point types (C++23)
+# endif
 
 // Error handling
 # if __has_include (<cassert>)
@@ -144,14 +146,14 @@
 # if __has_include (<exception>)
 # include <exception>            // Exception handling utilities
 # endif
+# if __has_include (<stacktrace>)
+# include <stacktrace>           // Stacktrace library (C++23)
+# endif
 # if __has_include (<stdexcept>)
 # include <stdexcept>            // Standard exception objects
 # endif
 # if __has_include (<system_error>)
 # include <system_error>         // Defines std::error_code, a platform-dependent error code (C++11)
-# endif
-# if __has_include (<stacktrace>)
-# include <stacktrace>           // Stacktrace library (C++23)
 # endif
 
 // Strings library
@@ -187,6 +189,12 @@
 # if __has_include (<array>)
 # include <array>                // std::array container (C++11)
 # endif
+# if __has_include (<flat_map>)
+# include <flat_map>             // std::flat_map container adaptors (C++23)
+# endif
+# if __has_include (<flat_set>)
+# include <flat_set>             // std::flat_set container adaptors (C++23)
+# endif
 # if __has_include (<deque>)
 # include <deque>                // std::deque container
 # endif
@@ -204,6 +212,9 @@
 # endif
 # if __has_include (<set>)
 # include <set>                  // std::set and std::multiset associative containers
+# endif
+# if __has_include (<mdspan>)
+# include <mdspan>               // std::mdspan view  (C++23)
 # endif
 # if __has_include (<span>)
 # include <span>                 // std::span view (C++20)
@@ -227,6 +238,9 @@
 # endif
 
 // Ranges library
+# if __has_include (<generator>)
+# include <generator>            // std::generator class template (C++23)
+# endif
 # if __has_include (<ranges>)
 # include <ranges>               // Range access, primitives, requirements, utilities and adaptors (C++20)
 # endif
@@ -303,6 +317,9 @@
 # endif
 # if __has_include (<ostream>)
 # include <ostream>              // std::basic_ostream, std::basic_iostream class templates and several typedefs
+# endif
+# if __has_include (<print>)
+# include <print>                // Formatted output library including std::print (C++23)
 # endif
 # if __has_include (<spanstream>)
 # include <spanstream>           // std::basic_spanstream, std::basic_ispanstream, std::basic_ospanstream class templates and typedefs (C++23)
