@@ -33,6 +33,23 @@ cxx.poptions =+ "-I$src_root" "-I$src_base"
   $cxx.path $poptions $coptions $cxx.mode $src
 }}
 
+# stdafx.hxx forwarding to out_root is not taking place, which presents a
+# problem if we intend to utilize build2's in module. In such a scenario, having
+# stdafx.hxx accessible in out_root becomes necessary, so we force it.
+#
+# Note that this is only required when using (any) forwarded configuration(s).
+# In short, we have the option to skip over it by checking whether "$src_root"
+# is equal to "$out_root" or not.
+#
+if ($src_root != $out_root)
+{
+  hxx{stdafx}:
+  {{
+    diag cp $>
+    cp $src_base/$name($>).hxx $out_root/hello/$name($>).hxx
+  }}
+}
+
 # The library serves a dual purpose: it acts as a build synchronization point
 # for creating the precompiled header (PCH), and also carries the necessary
 # compiler flags required for utilizing the PCH.
