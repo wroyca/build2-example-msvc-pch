@@ -46,7 +46,7 @@ if ($src_root != $out_root)
   hxx{stdafx}:
   {{
     diag cp $>
-    cp $src_base/$name($>).hxx $out_root/hello/$name($>).hxx
+    cp $src_base/$name($>).hxx $out_base/$name($>).hxx
   }}
 }
 
