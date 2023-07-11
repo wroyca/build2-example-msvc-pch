@@ -1,28 +1,5 @@
-// BUG (MSVC):
-//
-// Exclude `stdafx.hxx` reprocessing when "__build2_preprocess" is defined. This
-// is necessary to prevent the linker from spinning infinitely and leaking
-// increasingly large amounts of memory—around 1GB every few seconds—in such
-// scenarios.
-//
-// Moreover, interrupting the process may sometimes result in the linker
-// continuing to run in the background, which can be quite horrifying when it
-// goes unnoticed.
-//
-
 # pragma   once
 # ifndef __build2_preprocess
-
-// Make the standard library widely accessible by pre-compiling all its headers.
-//
-// Note that since not every part of the standard library is used in the source
-// code, there's a chance that we can still compile successfully even if a
-// specific header implementation is missing from, say, GCC.
-//
-// This is because if the missing header wasn't utilized in the first place, it
-// won't affect the compilation process. To anticipate and prevent any potential
-// issues with #include directives, we rely on the __has_include expression.
-//
 
 // Concepts library
 # if __has_include (<concepts>)
