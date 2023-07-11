@@ -6,10 +6,8 @@ libs =
 
 cxx.poptions =+ "-I$src_root" "-I$src_base"
 
-# Speed up the build process. Any stable header files, for example Standard
-# Library headers such as <vector>, should be included in stdafx.hxx. The
-# precompiled header is compiled only when it, or any files it includes, are
-# modified.
+# Compile C++ Standard Library headers into an intermediate form that is faster
+# to process.
 #
 <file{stdafx.pch} obja{stdafx.obj}>: cxx{stdafx} hxx{stdafx}
 {{
@@ -17,75 +15,67 @@ cxx.poptions =+ "-I$src_root" "-I$src_base"
   pch = $path($>[0])
   obj = $path($>[1])
 
-  sys_hdr = $regex.apply($cxx.sys_hdr_dirs, '(.+)', '-I\1')
-
-  # We rely on our build configuration to propagate the runtime as well as any
-  # required flags. (config.cc.poptions, config.cc.coptions)
+  # Flags `/EHsc` and `/utf-8` are inherent to build2 and are therefore
+  # independent of our build configuration.
   #
-  # Note that failing to do so typically does not cause a critical failure, but
-  # it can result in unforeseen and troublesome linking issues.
+  sys_hdr = $regex.apply($cxx.sys_hdr_dirs, '(.+)', '-I\1')
+  sys_pch = /nologo /EHsc /utf-8 /c /TP /Yc "/Fp$pch" "/Fo$obj"
+
+  # We depend on our build configuration to propagate the runtime and any
+  # necessary flags (config.cc.poptions, config.cc.coptions).
+  #
+  # Note that failing to do so usually doesn't cause the build to fail, but it
+  # can lead to unexpected and problematic linking problems.
   #
   poptions = $cxx.poptions $config.cc.poptions $sys_hdr
-  coptions = $cxx.coptions $config.cc.coptions /nologo /c /EHsc /utf-8 /TP /Yc "/Fp$pch" "/Fo$obj"
+  coptions = $cxx.coptions $config.cc.coptions $sys_pch
 
   diag c++ ($<[0])
 
   $cxx.path $poptions $coptions $cxx.mode $src
 }}
 
-# stdafx.hxx forwarding to out_root is not taking place, which presents a
-# problem if we intend to utilize build2's in module. In such a scenario, having
-# stdafx.hxx accessible in out_root becomes necessary, so we force it.
-#
-# Note that this is only required when using (any) forwarded configuration(s).
-# In short, we have the option to skip over it by checking whether "$src_root"
-# is equal to "$out_root" or not.
-#
-if ($src_root != $out_root)
-{
-  hxx{stdafx}:
-  {{
-    diag cp $>
-    cp $src_base/$name($>).hxx $out_base/$name($>).hxx
-  }}
-}
-
-# The library serves a dual purpose: it acts as a build synchronization point
-# for creating the precompiled header (PCH), and also carries the necessary
-# compiler flags required for utilizing the PCH.
-#
 [rule_hint=cxx] liba{stdafx}: file{stdafx.pch}:
 {
-  # Inform the rule that we will manually handle the prerequisite.
+  # Inform target(s) that we will manually handle prerequisites.
   #
   include = adhoc
 
-  # During the matching stage, we perform an update to ensure that the
-  # precompiled header (PCH) creation takes place prior to any code that relies
-  # on it.
+  # Build the PCH prior to any code that relies on it.
   #
   update = match
 }
 
-# We include the object file corresponding to the precompiled header (PCH) in
-# the library, ensuring that it will be linked into the DLL/EXE targets that
-# consume it.
-#
-liba{stdafx}: obja{stdafx}
+[rule_hint=cxx] liba{stdafx}: obja{stdafx}
 {
-  # We expose the compiler flags necessary for consuming the precompiled header
-  # (PCH).
+  # Export compiler flags necessary for target(s) to consume the PCH.
   #
   cxx.export.poptions += "/Yustdafx.hxx" "/FIstdafx.hxx" "/Fp$out_base/stdafx"
 
-  # To prevent the library from being inadvertently distributed, we exclude it
-  # from the installation stage, ensuring that it does not leak into our
-  # distribution.
+  # Prevent unintended distribution.
   #
   install = false
 }
 
-# Resolve the Internal Compiler Error (ICE) that occurs when using MSVC
-# preprocessing in conjunction with precompiled headers (PCH).
+if ($src_root != $out_root)
+{
+  hxx{stdafx}:
+  {{
+    s = $src_base/$name($>).hxx
+    o = $out_base/$name($>).hxx
+
+    diag cp $>
+
+    # It's necessary to have stdafx.hxx accessible in out_root for input file
+    # preprocessing, so we enforce it.
+    #
+    cp $s $o
+  }}
+}
+
+# When cc.reprocess is true, the __build2_preprocess is defined during
+# dependency extraction. This is used to work around separate preprocessing bugs
+# in the compiler.
 #
 obj{*}: cc.reprocess = true
+
