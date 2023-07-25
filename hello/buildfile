@@ -1,39 +1,44 @@
 libs =
 #import libs += libhello%lib{hello}
 
-./: exe{hello}
-    exe{hello}: {hxx ixx txx cxx}{** -stdafx} $libs liba{stdafx}
+exe{hello}: {hxx ixx txx cxx}{** -stdafx} liba{stdafx} $libs
 
 cxx.poptions =+ "-I$src_root" "-I$src_base"
 
-# Compile C++ Standard Library headers into an intermediate form that is faster
-# to process.
+# Rule to compile the C++ Standard Library headers into a more efficient
+# intermediate form.
+#
+# Note that until issues with C++ modules are adequately addressed, they remain
+# more of a theoretical curiosity than a practical solution, so PCH remains the
+# pragmatic choice.
+#
+# https://github.com/build2/build2/issues/5
 #
 <file{stdafx.pch} obja{stdafx.obj}>: cxx{stdafx} hxx{stdafx}
 {{
-  src = $path($<[0])
-  pch = $path($>[0])
-  obj = $path($>[1])
+  s = $path($<[0])
+  p = $path($>[0])
+  o = $path($>[1])
 
-  # Flags `/EHsc` and `/utf-8` are inherent to build2 and are therefore
-  # independent of our build configuration.
+  # /EHsc and /utf-8 are intrinsic to build2 and, as such, are not
+  # affected by our build configuration.
   #
   sys_hdr = $regex.apply($cxx.sys_hdr_dirs, '(.+)', '-I\1')
-  sys_pch = /nologo /EHsc /utf-8 /c /TP /Yc "/Fp$pch" "/Fo$obj"
+  sys_pch = /nologo /EHsc /utf-8 /c /TP /Yc "/Fp$p" "/Fo$o"
 
-  # We depend on our build configuration to propagate the runtime and any
-  # necessary flags (config.cc.poptions, config.cc.coptions).
-  #
-  # Note that failing to do so usually doesn't cause the build to fail, but it
-  # can lead to unexpected and problematic linking problems.
+  # Unlike above, here we rely on our build configuration to propagate runtime
+  # and essential flags (config.cc.poptions, config.cc.coptions). Failing to do
+  # so may not directly cause build failures, but it can give rise to unexpected
+  # problems.
   #
   poptions = $cxx.poptions $config.cc.poptions $sys_hdr
   coptions = $cxx.coptions $config.cc.coptions $sys_pch
 
   diag c++ ($<[0])
 
-  $cxx.path $poptions $coptions $cxx.mode $src
+  $cxx.path $poptions $coptions $cxx.mode $s
 }}
+
 
 [rule_hint=cxx] liba{stdafx}: file{stdafx.pch}:
 {
@@ -41,7 +46,7 @@ cxx.poptions =+ "-I$src_root" "-I$src_base"
   #
   include = adhoc
 
-  # Build the PCH prior to any code that relies on it.
+  # Build PCH prior to any source that relies on it.
   #
   update = match
 }
@@ -57,6 +62,12 @@ cxx.poptions =+ "-I$src_root" "-I$src_base"
   install = false
 }
 
+# Here we need to make stdafx.hxx accessible in out_root for build2's input file
+# preprocessing module, as the generated source will not be located within our
+# source tree.
+#
+# @@ should we use <> with /Fi instead, and if so, what are the implications?
+#
 if ($src_root != $out_root)
 {
   hxx{stdafx}:
@@ -66,16 +77,13 @@ if ($src_root != $out_root)
 
     diag cp $>
 
-    # It's necessary to have stdafx.hxx accessible in out_root for input file
-    # preprocessing, so we enforce it.
-    #
     cp $s $o
   }}
 }
 
-# When cc.reprocess is true, the __build2_preprocess is defined during
-# dependency extraction. This is used to work around separate preprocessing bugs
-# in the compiler.
+# When cc.reprocess is true, __build2_preprocess is defined during dependency
+# extraction. This is used to work around separate preprocessing bugs in the
+# compiler (one area where this is particularly evident is during PCH
+# compilation).
 #
 obj{*}: cc.reprocess = true
-
