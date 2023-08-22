@@ -1,0 +1,34 @@
+file{std.hxx.gch}: hxx{std}
+{{
+  i = $path($<[0])
+  o = $path($>[0])
+
+  poptions = $cxx.poptions $config.cc.poptions
+  coptions = $cxx.coptions $config.cc.coptions
+
+  diag pch $<
+
+  $cxx.path $poptions $coptions $cxx.mode -c $i -o $o
+}}
+
+[rule_hint=cxx] liba{std}: file{std.hxx.gch}:
+{
+  # Inform target(s) that we will manually handle prerequisites.
+  #
+  include = adhoc
+
+  # Build PCH prior to any source that relies on it.
+  #
+  update = match
+}
+
+[rule_hint=cxx] liba{std}: file{std.hxx.gch}
+{
+  # Export compiler flags necessary for target(s) to consume the PCH.
+  #
+  cxx.export.poptions += -include libhello/std.hxx
+
+  # Prevent unintended distribution.
+  #
+  install = false
+}

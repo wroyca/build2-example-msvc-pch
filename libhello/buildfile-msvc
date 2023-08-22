@@ -1,0 +1,51 @@
+# Ad hoc to compile C++ Standard Library headers into a more efficient
+# intermediate form.
+#
+# Note that C++ modules remain more of a theoretical curiosity than a practical
+# solution, so PCH remains the pragmatic choice.
+#
+
+<file{std.pch} obja{std.obj}>: cxx{std} hxx{std}
+{{
+  src = $path($<[0])
+  pch = $path($>[0])
+  obj = $path($>[1])
+
+  sys_hdr = $regex.apply($cxx.sys_hdr_dirs, '(.+)', '-I\1')
+  sys_pch = /nologo /EHsc /utf-8 /c /TP /Yc "/Fp$pch" "/Fo$obj"
+
+  # We depend on our build configuration to carry forward runtime and flags
+  # (config.cc.poptions, config.cc.coptions) configuration. Neglecting this
+  # could potentially lead to unforeseen issues, even though it might not result
+  # in immediate build failures.
+  #
+
+  poptions = $cxx.poptions $config.cc.poptions $sys_hdr
+  coptions = $cxx.coptions $config.cc.coptions $sys_pch
+
+  diag c++ $<
+
+  $cxx.path $poptions $coptions $cxx.mode $src
+}}
+
+[rule_hint=cxx] liba{std}: file{std.pch}:
+{
+  # Inform targets that we will manually handle prerequisites.
+  #
+  include = adhoc
+
+  # Build PCH prior to any source that relies on it.
+  #
+  update = match
+}
+
+[rule_hint=cxx] liba{std}: obja{std}
+{
+  # Export compiler flags necessary for targets to consume the PCH.
+  #
+  cxx.export.poptions += "/Yulibhello/std.hxx" "/FIlibhello/std.hxx" "/Fp$out_base/std"
+
+  # Prevent unintended distribution.
+  #
+  install = false
+}

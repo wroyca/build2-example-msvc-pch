@@ -1,0 +1,14 @@
+$out_root/
+{
+  include hello/
+  include libhello/
+}
+
+switch $import.target
+{
+  case exe{hello}
+    export $out_root/hello/$import.target
+
+  case lib{hello}
+    export $out_root/libhello/$import.target
+}

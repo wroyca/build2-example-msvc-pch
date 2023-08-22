@@ -5,9 +5,9 @@ main (int argc, char* argv[])
 
   if (argc < 2)
   {
-    println ("error: missing name");
+    cerr << "error: missing name" << endl;
     return 1;
   }
 
-  println ("Hello, {}!", argv[1]);
+  cout << "Hello, " << argv[1] << '!' << endl;
 }

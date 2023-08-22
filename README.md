@@ -1,3 +1,1 @@
 # hello
-
-C++ executable
