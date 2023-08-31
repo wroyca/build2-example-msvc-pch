@@ -28,7 +28,7 @@ file{std.hxx.gch}: hxx{std}
   #
   cxx.export.poptions += -include libhello/std.hxx
 
-  # Prevent unintended distribution.
+  # Install into lib/
   #
-  install = false
+  install = lib/
 }

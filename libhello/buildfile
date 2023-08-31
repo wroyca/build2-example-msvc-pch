@@ -10,7 +10,6 @@ switch $cxx.target.class
 {
   case 'windows'
     source buildfile-msvc
-
   case 'linux'
     source buildfile-gcc
 }

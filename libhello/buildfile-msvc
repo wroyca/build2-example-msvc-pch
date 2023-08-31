@@ -45,7 +45,7 @@
   #
   cxx.export.poptions += "/Yulibhello/std.hxx" "/FIlibhello/std.hxx" "/Fp$out_base/std"
 
-  # Prevent unintended distribution.
+  # Install into lib/
   #
-  install = false
+  install = lib/
 }
